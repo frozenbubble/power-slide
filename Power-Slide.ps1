@@ -155,14 +155,20 @@ function Load-Theme
 
     if (Test-Path $filename) { $script:theme = . $filename }
 
-    else { $errorStack.Push('Could not find theme file') }
+    else { Push-Error 'Could not find theme file' }
+}
+
+function Push-Error ($message)
+{
+    $errorStack.Push($message)
 }
 
 function Pop-Error
 {
-    if ($errorStack.Count -ne 0)
+    while ($errorStack.Count -ne 0)
     {
-        Write-Host $errorStack.Pop()
+        Write-Host "Error: $($errorStack.Pop())" -ForegroundColor Red
+        Write-Host ''
     }
 }
 
@@ -199,9 +205,9 @@ function global:done
     Remove-Item Function:\print
     Remove-Item Function:\done
 
-    Remove-Variable -Name '_slides'
-    Remove-Variable -Name '_theme'
-    Remove-Variable -Name '_selectedItem'
+    Remove-Variable -Name '_slides' -Scope Global
+    Remove-Variable -Name '_theme' -Scope Global
+    Remove-Variable -Name '_selectedItem' -Scope Global
 }
 
 $defaultTheme = {
@@ -261,24 +267,32 @@ $errorStack = New-Object System.Collections.Stack
 while ($token -ne ":q")
 {
     Print-Welcome
+    Pop-Error
     Write-Host 'Power-Slide>' -ForegroundColor Magenta
     $token = Read-Host
     
-    switch ($token)
+    try
     {
-        ':list' { List-Slides }
-        ':edit' { Edit-Slides }
-        ':save' { Save-Slides }
-        ':theme'{ Load-Theme  }
-        ':load' { Load-Slides }
-        
-        ':present' 
+        switch ($token)
         {
-            $token = ':q'
+            ':list' { List-Slides }
+            ':edit' { Edit-Slides }
+            ':save' { Save-Slides }
+            ':theme'{ Load-Theme  }
+            ':load' { Load-Slides }
+        
+            ':present' 
+            {
+                $token = ':q'
 
-            New-Variable -Name '_slides' -Value $slides -Scope Global -Force
-            New-Variable -Name '_theme' -Value $theme -Scope Global -Force
-            New-Variable -Name '_selectedItem' -Value (-1) -Scope Global -Force
+                New-Variable -Name '_slides' -Value $slides -Scope Global -Force
+                New-Variable -Name '_theme' -Value $theme -Scope Global -Force
+                New-Variable -Name '_selectedItem' -Value (-1) -Scope Global -Force
+            }
         }
+    }
+    catch
+    {
+        Push-Error $_.Exception.Message
     }
 }
