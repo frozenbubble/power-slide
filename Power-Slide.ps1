@@ -1,4 +1,9 @@
-﻿function List-Slides 
+﻿param(
+    $SlideShow = [string]::Empty,
+    $Skin = [string]::Empty
+)
+
+function List-Slides 
 {
     $slides | % { Write-Host $_.Title }
 
@@ -61,12 +66,16 @@ function Save-Slides
     $slides | Export-Csv -Path $fileName
 }
 
-function Load-Slides
+function Load-Slides ($fileName = [string]::Empty)
 {
-    cls
-    Write-Host 'Power-Slide>Load slides>' -ForegroundColor Magenta
+    if ($fileName -eq [string]::Empty)
+    {
+        cls
+        Write-Host 'Power-Slide>Load slides>' -ForegroundColor Magenta
 
-    $fileName = Read-Host -Prompt 'File name'
+        $fileName = Read-Host -Prompt 'File name'
+    }
+
     $Script:slides = Import-Csv -Path $fileName
 }
 
@@ -140,12 +149,17 @@ function Edit-Slide($index)
     } while ($token -ne ':done')
 }
 
-function Load-Theme
+function Load-Theme ($fileName = [string]::Empty)
 {
-    cls
-    Write-Host 'Power-Slide>Load theme>' -ForegroundColor Magenta
+    if ($fileName -eq [string]::Empty)
+    {
+        cls
+        Write-Host 'Power-Slide>Load theme>' -ForegroundColor Magenta
 
-    $filename = Read-Host -Prompt 'Path to theme file'
+        $filename = Read-Host -Prompt 'Path to theme file'
+        
+        if ((-not $fileName.Contains('\')) -or (-not $fileName.Contains('/'))) { $fileName = ".\$fileName" }
+    }
     
     if (-not (Test-Path $filename)) 
     {
@@ -262,6 +276,9 @@ $slides = @($slide1)
 $globalIndex = 0
 $theme = $defaultTheme
 $errorStack = New-Object System.Collections.Stack
+
+if ($SlideShow -ne [string]::Empty) { Load-Slides $SlideShow }
+if ($Skin -ne [string]::Empty) { Load-Theme $Skin }
 
 
 while ($token -ne ":q")
