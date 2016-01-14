@@ -144,7 +144,7 @@ function Edit-Slide($index)
         {
             ':title' { $slides[$index].Title = Read-Host -Prompt 'Title' }
             ':bullet' { $slides[$index].Points = Read-Host -Prompt 'Bullet points ( default separator: @)' }
-            ':subtitle' { $slides[$index].SubTitle = Read-Host -Prompt 'Subtitle' }
+            ':subtitle' { $slides[$index].Subtitle = Read-Host -Prompt 'Subtitle' }
         }
     } while ($token -ne ':done')
 }
@@ -184,6 +184,11 @@ function Pop-Error
         Write-Host "Error: $($errorStack.Pop())" -ForegroundColor Red
         Write-Host ''
     }
+}
+
+function Sanitize ($input)
+{
+    
 }
 
 function global:next
@@ -228,8 +233,8 @@ $defaultTheme = {
     param($slide)
     
     $title = $slide.Title
-    $subtitle = $slide.SubTitle
-    $points = $slide.Points.Split('@')
+    $subtitle = $slide.Subtitle
+    $points = if ($slide.Points.Length -ne 0) {$slide.Points.Split('@')} else {@()}
     $other = $slide.Other
 
     $slideWidth = 40
@@ -237,31 +242,50 @@ $defaultTheme = {
 
     $prefixLength = [Math]::Floor(($slideWidth - $title.Length) / 2) - 1
     $suffixLength = $slideWidth - $prefixLength - $title.Length - 2
-        
+       
+    
     Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
-    Write-Host ("|$(' ' * $prefixLength)$($title)$(' ' * $suffixLength)|") -ForegroundColor Cyan
-    Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
-    Write-Host ''
-    Write-Host ''
 
-    $rowsLeft = $slideHeight - 5
-    $points | %{
-        Write-Host '> ' -NoNewline
+    if ($points.Count -ne 0)
+    {
+        Write-Host ("|$(' ' * $prefixLength)$($title)$(' ' * $suffixLength)|") -ForegroundColor Cyan
+        Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
+        Write-Host ''
+        Write-Host ''
 
-        if ($_.Length -gt $slideWidth) {
-            for($i = 0; $i -lt ($_.Length/$slideWidth); $i++) {
-                $start = $i * $slideWidth
-                $length = $slideWidth,($_.Length - $start)
-                Write-Host ($_.Substring($start, $length))
+        $rowsLeft = $slideHeight - 5
+        $points | %{
+            Write-Host '> ' -NoNewline
+
+            if ($_.Length -gt $slideWidth) {
+                for($i = 0; $i -lt ($_.Length/$slideWidth); $i++) {
+                    $start = $i * $slideWidth
+                    $length = $slideWidth,($_.Length - $start)
+                    Write-Host ($_.Substring($start, $length))
+                }
+            } else {
+                Write-Host $_
             }
-        } else {
-            Write-Host $_
+
+            $rowsLeft--
         }
 
-        $rowsLeft--
+        Write-Host ("`n" * ($rowsLeft - 1))
     }
+    else
+    {
+        $subPrefixLength = [Math]::Floor(($slideWidth - $subTitle.Length) / 2) - 1
+        $subSuffixLength = $slideWidth - $subPrefixLength - $subTitle.Length - 2
 
-    Write-Host ("`n" * ($rowsLeft - 1))
+        Write-Host ("`n" * ([Math]::Floor($slideHeight/2) - 4))
+        Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
+        Write-Host ("|$(' ' * $prefixLength)$($title)$(' ' * $suffixLength)|") -ForegroundColor Cyan
+        Write-Host ("|$(' ' * ([Math]::Floor($slideWidth/2) - 2))--$(' ' * ([Math]::Floor($slideWidth/2) - 2))|") -ForegroundColor Cyan
+        Write-Host ("|$(' ' * $subPrefixLength)$($subTitle)$(' ' * $subSuffixLength)|") -ForegroundColor Cyan
+        Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
+        Write-Host ("`n" * ([Math]::Floor($slideHeight/2) - 4))
+    }
+    
     Write-Host ('-' * $slideWidth) -ForegroundColor Cyan
 }
 
@@ -270,6 +294,7 @@ $token = ""
 $slide1 = New-Object PSObject -Property @{
     Title = 'New Slide'    
     Points = 'Point 1@Point 2@Point 3'
+    Subtitle = 'Subtitle'
 }
 
 $slides = @($slide1)
@@ -279,7 +304,6 @@ $errorStack = New-Object System.Collections.Stack
 
 if ($SlideShow -ne [string]::Empty) { Load-Slides $SlideShow }
 if ($Skin -ne [string]::Empty) { Load-Theme $Skin }
-
 
 while ($token -ne ":q")
 {
