@@ -1,0 +1,11 @@
+#TYPE System.Management.Automation.PSCustomObject
+"Title","Points","Subtitle"
+"A bit of PowerShell","","Peter Szucs"
+"Content","Motivation@Some basics","Subtitle"
+"Disclaimer","","This is not a comprehensive guide"
+"Motivation","What makes a good shell?@Is powershell one?@What does it bring to the table?","Subtitle"
+"Cmdlets","How to use them?@Most essential ones@Why are they so long???","Subtitle"
+"Types","GetType@Accessing .NET types@enforcing types@conversion@odd examples","Subtitle"
+"Variables","declaring variables@variables in strings@arrays, maps","Subtitle"
+"Control structures","conditionals@loops@the pipe@foreach, where, select","Subtitle"
+"The end","","Questions?"
